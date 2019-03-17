@@ -91,11 +91,6 @@ RET_VALUE   ME_I10KL_getTime(FI_TIME* time)
         if (ret == RET_OK)
         {
             int i;
-            for(i = 0 ; i < result_count ; i++)
-            {
-                TRACE("%d : %s\n", i, results[i]);
-            }
-            
             if (strcasecmp(results[result_count-1], "OK") != 0)
             {
                 return  RET_ERROR;

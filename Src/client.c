@@ -460,16 +460,27 @@ RET_VALUE   CLIENT_loop(void)
         
     case    CLIENT_STATUS_TIME_SYNC:
         {
+            FI_TIME requestTime;
+            FI_TIME currentTime;
             FI_TIME time;
 
+            FI_TIME_get(&requestTime);
+            
             log_.timeSync.retryCount++;
             
             ret = ME_I10KL_getTime(&time);
             if (ret == RET_OK)
             {
                 TRACE("Time Sync : %s", FI_TIME_toString(time, "%Y-%m-%d %H:%M:%S"));
-                
+                FI_TIME_get(&currentTime);
+            
+                if ((currentTime > time) && ((currentTime - time) < 60))
+                {
+                    time += (currentTime - time) / 2;
+                }
+
                 FI_TIME_set(time);
+
                 CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_FINISHED);
             }
             else 
@@ -609,7 +620,6 @@ RET_VALUE   CLIENT_loop(void)
             CLIENT_MQTT_disconnect();
             FI_TIME_get(&log_.server.disconnectedTime);
             
-            SHELL_printf("Auto Speep : Off\n");
             ME_I10KL_setAutoSleep(true);
             CLIENT_setStatus(CLIENT_STATUS_FINIALIZE);
         }
@@ -617,7 +627,6 @@ RET_VALUE   CLIENT_loop(void)
         
     case    CLIENT_STATUS_FINIALIZE:
         {
-            SHELL_printf("Exte Power : Off\n");
             SYS_setExtPower(false);
 
             CLIENT_MODE mode;
