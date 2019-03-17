@@ -15,6 +15,7 @@
 # Precompiled Headers
 *.gch
 *.pch
+**/EWARM/*.dep  
 
 # Libraries
 *.lib
@@ -39,8 +40,27 @@
 # Debug files
 *.dSYM/
 *.su
-*.idb
-*.pdb
+
+# IAR Settings  
+**/settings/*.crun  
+**/settings/*.dbgdt  
+**/settings/*.cspy  
+**/settings/*.cspy.*  
+**/settings/*.xcl  
+**/settings/*.dni  
+**/settings/*.dnx  
+**/settings/*.wsdt  
+**/settings/*.wspos  
+**/EWARM/*.dep
+
+# IAR Debug Exe  
+**/Exe/*.sim  
+
+# IAR Debug Obj  
+**/Obj/*.pbd  
+**/Obj/*.pbd.*  
+**/Obj/*.pbi  
+**/Obj/*.pbi.* 
 
 # Kernel Module Compile Results
 *.mod*
@@ -50,3 +70,4 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+*.dnx
