@@ -21,6 +21,9 @@ RET_VALUE   ME_I10KL_stop(void);
 
 RET_VALUE   ME_I10KL_getVersion(char* version, uint32_t maxVersionLength);
 
+RET_VALUE   ME_I10KL_attach(void);
+RET_VALUE   ME_I10KL_detach(void);
+
 RET_VALUE   ME_I10KL_createSocket(uint32_t protocol, uint16_t port, uint32_t* socket);
 RET_VALUE   ME_I10KL_closeSocket(uint32_t socket);
 

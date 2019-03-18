@@ -22,7 +22,8 @@ static  const char* typeNames_[] =
     "SIM",
     "GIPAM2000",
     "ACURRA A3300",
-    "ACURRA_A3300_2"
+    "ACURRA_A3300_2",
+    "LS HCUM"
 };
 
 static const DEVICE_DESCRIPTION  deviceDescriptions[] = 

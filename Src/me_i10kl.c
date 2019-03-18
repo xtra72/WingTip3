@@ -172,12 +172,6 @@ RET_VALUE   ME_I10KL_createSocket(uint32_t protocol, uint16_t port, uint32_t* so
         ret = ME_I10KL_parse((char *)receiveBuffer, results, 4, &result_count);
         if (ret == RET_OK)
         {
-            int i;
-            for(i = 0 ; i < result_count ; i++)
-            {
-                TRACE("%d : %s\n", i, results[i]);
-            }
-            
             if (strcasecmp(results[result_count-1], "OK") != 0)
             {
                 return  RET_ERROR;
@@ -209,12 +203,6 @@ RET_VALUE   ME_I10KL_closeSocket(uint32_t socket)
         ret = ME_I10KL_parse((char *)receiveBuffer, results, 4, &result_count);
         if (ret == RET_OK)
         {
-            int i;
-            for(i = 0 ; i < result_count ; i++)
-            {
-                TRACE("%d : %s\n", i, results[i]);
-            }
-            
             if (strcasecmp(results[result_count-1], "OK") != 0)
             {
                 return  RET_ERROR;
@@ -337,6 +325,63 @@ RET_VALUE   ME_I10KL_MQTT_publish(uint16_t socket, uint8_t* ip, uint16_t port, c
             {
                 return  RET_SOCKET_CLOSED;
             }            
+        }
+    }
+    
+    return  ret;
+
+}
+
+
+RET_VALUE   ME_I10KL_attach(void)
+{
+    RET_VALUE   ret;
+    uint32_t receivedLength = 0;
+    
+    ME_I10KL_clearBuffer();
+    
+    uint32_t messageLength = sprintf((char *)sendBuffer, "AT+CGATT=1\r\n");
+   
+    ret = ME_I10KL_sendAndReceive(sendBuffer, messageLength, receiveBuffer, sizeof(receiveBuffer), &receivedLength, config_.timeout);
+    if (ret == RET_OK)
+    {
+        char*   results[4];
+        uint32_t    result_count = 0;
+        ret = ME_I10KL_parse((char *)receiveBuffer, results, 4, &result_count);
+        if (ret == RET_OK)
+        {
+            if (strcasecmp(results[result_count-1], "OK") != 0)
+            {
+                return  RET_ERROR;
+            }
+        }
+    }
+    
+    return  ret;
+
+}
+
+RET_VALUE   ME_I10KL_detach(void)
+{
+    RET_VALUE   ret;
+    uint32_t receivedLength = 0;
+    
+    ME_I10KL_clearBuffer();
+    
+    uint32_t messageLength = sprintf((char *)sendBuffer, "AT+CGATT=0\r\n");
+   
+    ret = ME_I10KL_sendAndReceive(sendBuffer, messageLength, receiveBuffer, sizeof(receiveBuffer), &receivedLength, config_.timeout);
+    if (ret == RET_OK)
+    {
+        char*   results[4];
+        uint32_t    result_count = 0;
+        ret = ME_I10KL_parse((char *)receiveBuffer, results, 4, &result_count);
+        if (ret == RET_OK)
+        {
+            if (strcasecmp(results[result_count-1], "OK") != 0)
+            {
+                return  RET_ERROR;
+            }
         }
     }
     

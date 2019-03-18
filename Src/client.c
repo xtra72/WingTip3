@@ -23,6 +23,7 @@ const   char*   statusNames_[] =
     "Modem Init Done",   //  CLIENT_STATUS_MODEM_INIT_DONE,
     "Modem Reset",   //  CLIENT_STATUS_MODEM_RESET,
     "Modem Final",   //  CLIENT_STATUS_MODEM_FINAL,
+    "Modem Detach",       // CLIENT_STATUS_MODEM_DETACH,
     
     "Time Sync Start",   //  CLIENT_STATUS_TIME_SYNC_START,
     "Time Sync",   //  CLIENT_STATUS_TIME_SYNC,
@@ -619,6 +620,13 @@ RET_VALUE   CLIENT_loop(void)
         {
             CLIENT_MQTT_disconnect();
             FI_TIME_get(&log_.server.disconnectedTime);
+            CLIENT_setStatus(CLIENT_STATUS_MODEM_DETACH);
+        }
+        break;
+        
+    case    CLIENT_STATUS_MODEM_DETACH:
+        {
+            ME_I10KL_detach();
             
             ME_I10KL_setAutoSleep(true);
             CLIENT_setStatus(CLIENT_STATUS_FINIALIZE);
@@ -742,14 +750,12 @@ RET_VALUE   CLIENT_loop(void)
             SHELL_printf("Restart\n");
             CLIENT_MQTT_disconnect();
             modemResetCount_++;
+
+            CLIENT_setStatus(CLIENT_STATUS_MODEM_DETACH);
             
             if (config_.maxRetryCount < modemResetCount_)
             {
                 CLIENT_setStatus(CLIENT_STATUS_MODEM_INIT);
-            }
-            else 
-            {
-                CLIENT_setStatus(CLIENT_STATUS_FINIALIZE);
             }
         }
         break;
