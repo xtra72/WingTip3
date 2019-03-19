@@ -180,3 +180,12 @@ RET_VALUE	SYS_setExtPower(bool on)
 }
 
 
+
+RET_VALUE   SYSTEM_globalConfigSave()
+{
+    extern  bool    configSave_;
+
+    configSave_ = true;
+    
+    return  RET_OK;
+}

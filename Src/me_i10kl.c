@@ -73,6 +73,43 @@ RET_VALUE   ME_I10KL_getVersion(char* version, uint32_t maxVersionLength)
     return  RET_NOT_SUPPORTED_FUNCTION;
 }
 
+
+RET_VALUE   ME_I10KL_getIMEI(char* imei, uint32_t length)
+{
+    RET_VALUE   ret;
+    uint32_t receivedLength = 0;
+    
+    ME_I10KL_clearBuffer();
+    
+    uint32_t messageLength;
+
+    messageLength = sprintf((char *)sendBuffer, "AT+CGSN\r\n");
+    
+    ret = ME_I10KL_sendAndReceive(sendBuffer, messageLength, receiveBuffer, sizeof(receiveBuffer), &receivedLength, config_.timeout);
+    if (ret == RET_OK)
+    {
+        char*   results[4];
+        uint32_t    result_count = 0;
+        ret = ME_I10KL_parse((char *)receiveBuffer, results, 4, &result_count);
+        if (ret == RET_OK)
+        {
+            if (strcasecmp(results[result_count-1], "OK") != 0)
+            {
+                return  RET_ERROR;
+            }
+            
+            if (length < strlen(results[0] + 1))
+            {
+                return    RET_BUFFER_TOO_SMALL;
+            }
+            strcpy(imei, results[0]);
+        }
+    }
+    
+    return  ret;
+
+}
+
 RET_VALUE   ME_I10KL_getTime(FI_TIME* time)
 {
     RET_VALUE   ret;

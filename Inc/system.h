@@ -7,6 +7,7 @@ typedef struct
 {
     bool            activation;
     FI_TIME         activationTime;
+    
     struct  
     {
         bool        enable;
@@ -34,5 +35,7 @@ RET_VALUE	SYS_setExtPower18(bool on);
 bool	    SYS_getExtPower33(void);
 RET_VALUE	SYS_setExtPower33(bool on);
 RET_VALUE	SYS_setExtPower(bool on);
+
+RET_VALUE   SYSTEM_globalConfigSave();
 
 #endif

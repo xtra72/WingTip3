@@ -23,6 +23,7 @@ RET_VALUE SHELL_CLIENT_pub(char *argv[], uint32_t argc, struct _SHELL_COMMAND co
 RET_VALUE SHELL_CLIENT_help(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_CLIENT_retryCount(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_CLIENT_Id(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
+RET_VALUE SHELL_CLIENT_delay(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 
 static SHELL_COMMAND   commandSet_[] = 
 {
@@ -75,6 +76,11 @@ static SHELL_COMMAND   commandSet_[] =
         .name = "retry",     
         .function = SHELL_CLIENT_retryCount,         
         .shortHelp = "Retry Count"
+    },
+    {
+        .name = "delay",     
+        .function = SHELL_CLIENT_delay,         
+        .shortHelp = "Delay"
     },
     {   
         .name = "help",     
@@ -737,6 +743,7 @@ RET_VALUE   SHELL_CLIENT_printConfig(CLIENT_CONFIG* config)
     SHELL_printf("%16s : %s\n", "Client ID", config->id);
     SHELL_printf("%16s : %s\n", "User ID", config->server.userId);
     SHELL_printf("%16s : %s\n", "Topic", config->server.topic);
+
     switch(config->opMode.mode)
     {
     case    CLIENT_MODE_IDLE:
@@ -762,6 +769,22 @@ RET_VALUE   SHELL_CLIENT_printConfig(CLIENT_CONFIG* config)
             }
         }
         break;
+    }
+
+    SHELL_printf("%16s : %s\n", "Delay", config->delay.enable?"Enable":"Disable");
+    if (config->delay.enable)
+    {
+        SHELL_printf("%16s : %d\n", "Base", config->delay.base);
+        if (config->delay.mode == CLIENT_DELAY_MODE_TRANSTER_DELAY)
+        {
+            SHELL_printf("%16s : %s\n", "Mode", "Transfer Delay");
+        }
+        else 
+        {
+            SHELL_printf("%16s : %s\n", "Mode", "WakeUp Delay");
+        }
+        SHELL_printf("%16s : %d\n", "Period", config->delay.period);
+        SHELL_printf("%16s : %d\n", "Offset", config->delay.offset);
     }
     
     return  RET_OK;
@@ -804,6 +827,72 @@ RET_VALUE SHELL_CLIENT_Id(char *argv[], uint32_t argc, struct _SHELL_COMMAND con
                 }
             }
         }
+    }
+        
+    return  ret;
+}
+
+
+RET_VALUE SHELL_CLIENT_delay(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command)
+{
+    RET_VALUE   ret = RET_INVALID_ARGUMENT;
+    CLIENT_CONFIG   config;
+    
+    if (argc == 1)
+    {
+        CLIENT_getConfig(&config);
+
+        SHELL_printf("%16s : %s\n", "Delay", config.delay.enable?"Enable":"Disable");
+        if (config.delay.enable)
+        {
+            SHELL_printf("%16s : %d\n", "Base", config.delay.base);
+            if (config.delay.mode == CLIENT_DELAY_MODE_TRANSTER_DELAY)
+            {
+                SHELL_printf("%16s : %s\n", "Mode", "Transfer Delay");
+            }
+            else 
+            {
+                SHELL_printf("%16s : %s\n", "Mode", "WakeUp Delay");
+            }
+            SHELL_printf("%16s : %d\n", "Period", config.delay.period);
+            SHELL_printf("%16s : %d\n", "Offset", config.delay.offset);
+        }
+    }
+    else if (argc == 3)
+    {
+        if (strcasecmp(argv[1], "base") == 0)
+        {
+            uint32_t    value;
+            if (strToUint32(argv[2], &value))
+            {
+                ret = CLIENT_setDelayBase(value);
+            }
+        }
+        else if (strcasecmp(argv[1], "mode") == 0)
+        {
+            uint32_t    value;
+            if (strToUint32(argv[2], &value))
+            {
+                ret = CLIENT_setDelayMode((CLIENT_DELAY_MODE)value);
+            }
+        }
+        else if (strcasecmp(argv[1], "period") == 0)
+        {
+            uint32_t    value;
+            if (strToUint32(argv[2], &value))
+            {
+                ret = CLIENT_setDelayPeriod(value);
+            }
+        }
+        else if (strcasecmp(argv[1], "offset") == 0)
+        {
+            uint32_t    value;
+            if (strToUint32(argv[2], &value))
+            {
+                ret = CLIENT_setDelayOffset(value);
+            }
+        }
+        
     }
         
     return  ret;

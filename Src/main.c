@@ -83,7 +83,7 @@ osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 CONFIG  config_;
-
+bool    configSave_ = false;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,6 +99,7 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+RET_VALUE   GlobalConfigSave(void);
 
 /* USER CODE END PFP */
 
@@ -528,6 +529,87 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+RET_VALUE   GlobalConfigSave(void)
+{
+    RET_VALUE   ret = RET_OK;
+    
+    CONFIG* config = pvPortMalloc(sizeof(CONFIG));
+    if (config == NULL)
+    {
+        return  RET_NOT_ENOUGH_MEMORY;
+    }
+
+    
+    memcpy(config, &config_, sizeof(CONFIG));
+    ret = SYSTEM_getConfig(&config->system);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get system settings!\n");
+        return  ret;
+    }
+
+    ret = CLIENT_getConfig(&config->client);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get client settings!\n");
+        return  ret;
+    }
+    
+    ret = DEVICE_getConfig(&config->device);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get device settings!\n");
+        return  ret;
+    }
+
+    ret = SHELL_getConfig(&config->shell);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get shell settings!\n");
+        return  ret;
+    }
+    
+    ret = ME_I10KL_getConfig(&config->me_i10kl);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get ME I10KL settings!\n");
+        return  ret;
+    }
+    
+    ret = LOG_getConfig(&config->log);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get LOG settings!\n");
+        return  ret;
+    }
+    
+    ret = TRACE_getConfig(&config->trace);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Can't get TRACE settings!\n");
+        return  ret;
+    }
+    
+    ret = CONFIG_save(config);
+    if (ret != RET_OK)
+    {
+        vPortFree(config);
+        SHELL_printf("Failed to save settings!\n");
+        return  ret;
+    }
+    
+    memcpy(&config_, config, sizeof(CONFIG));
+    vPortFree(config);
+
+    return  ret;    
+}
 
 /* USER CODE END 4 */
 
@@ -574,6 +656,12 @@ void StartDefaultTask(void const * argument)
         if (SYSTEM_getActivation())
         {
             CLIENT_loop();
+            
+            if (configSave_)
+            {
+                GlobalConfigSave();
+                configSave_ = false;
+            }
         }
         
         osDelay(1);

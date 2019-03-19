@@ -17,6 +17,7 @@ const   char*   statusNames_[] =
     "Reinit",   //  CLIENT_STATUS_REINIT,
     "Init Done",   //  CLIENT_STATUS_SYSTEM_INIT_DONE,
     "Read Data",   //  CLIENT_STATUS_READ_DATA,
+    "Read Data Finished", // CLIENT_STATUS_READ_DATA_FINISHED
     
     "Modem Init",   //  CLIENT_STATUS_MODEM_INIT,
     "Modem Wakeup",   //  CLIENT_STATUS_MODEM_WAKEUP,
@@ -24,6 +25,8 @@ const   char*   statusNames_[] =
     "Modem Reset",   //  CLIENT_STATUS_MODEM_RESET,
     "Modem Final",   //  CLIENT_STATUS_MODEM_FINAL,
     "Modem Detach",       // CLIENT_STATUS_MODEM_DETACH,
+    
+    "Calcuate Transfer Offset", 
     
     "Time Sync Start",   //  CLIENT_STATUS_TIME_SYNC_START,
     "Time Sync",   //  CLIENT_STATUS_TIME_SYNC,
@@ -351,13 +354,24 @@ RET_VALUE   CLIENT_loop(void)
                 FI_TIME_get(&log_.device.dataTime);
                 memcpy(&log_.device.data, &data_, sizeof(data_));
                 
-                CLIENT_setStatus(CLIENT_STATUS_MODEM_INIT);
+                CLIENT_setStatus(CLIENT_STATUS_READ_DATA_FINISHED);
                 FI_TIME_get(&log_.modem.startTime);
             }
 
         }
         break;
         
+    case    CLIENT_STATUS_READ_DATA_FINISHED:
+        {
+            if (config_.delay.enable && config_.delay.mode == CLIENT_DELAY_MODE_TRANSTER_DELAY)
+            {
+                waitingTime = config_.delay.offset * 1000;
+                TRACE("Standby modem wakeup : %d seconds\n", waitingTime / 1000); 
+            }
+            
+            CLIENT_setStatus(CLIENT_STATUS_MODEM_INIT);
+        }
+
     case    CLIENT_STATUS_MODEM_INIT:
         {
             TRACE("Initialized\n");
@@ -431,7 +445,15 @@ RET_VALUE   CLIENT_loop(void)
             {
                 FI_TIME_get(&log_.modem.initFinishedTime);
                 TRACE("Modem initialization complete!\n");
-                CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);
+                
+                if (config_.delay.enable && (config_.delay.base != 0)&& (config_.delay.offset == 0))
+                {
+                    CLIENT_setStatus(CLIENT_STATUS_CALCULATE_TRANSFER_OFFSET);
+                }
+                else
+                {
+                    CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);
+                }
             }
             else 
             {
@@ -449,6 +471,53 @@ RET_VALUE   CLIENT_loop(void)
                     TRACE("Modem initialization retry : %d\n", retryCount_);
                 }
             }
+        }
+        break;
+        
+    case    CLIENT_STATUS_CALCULATE_TRANSFER_OFFSET:
+        {
+            char    imei[32];
+                
+            memset(imei, 0, sizeof(imei));
+            ret = ME_I10KL_getIMEI(imei, sizeof(imei));
+            if (ret == RET_OK)
+            {
+                uint32_t    value = 0;
+                if (strlen(imei) > 9)
+                {
+                    strToUint32(&imei[strlen(imei) - 9], &value);
+                }
+                else
+                {
+                    strToUint32(imei, &value);
+                }
+
+                if (value != 0)
+                {
+                    config_.delay.offset = (value % config_.delay.base) * config_.delay.period;
+                
+                    SYSTEM_globalConfigSave();
+                }
+
+                CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);                
+            }
+            else 
+            {
+                TRACE("No response from I10KL.\n");
+                retryCount_++;
+                
+                if (config_.maxRetryCount <= retryCount_)
+                {
+                    retryCount_ = 0;
+                    TRACE("Modem initialization retry failed.");
+                    CLIENT_setStatus(CLIENT_STATUS_MODEM_RESET);
+                }
+                else 
+                {
+                    TRACE("Modem initialization retry : %d\n", retryCount_);
+                }
+            }
+
         }
         break;
         
@@ -667,7 +736,15 @@ RET_VALUE   CLIENT_loop(void)
                 ret = CLIENT_getNextAlarm(currentTime, &nextAlarm);
                 if (ret == RET_OK)
                 {
-                    TRACE("WakeUp : %d", nextAlarm);
+                    if (config_.delay.enable && (config_.delay.mode == CLIENT_DELAY_MODE_WAKEUP_DELAY))
+                    {
+                        TRACE("WakeUp : %d + %d", nextAlarm, config_.delay.offset);
+                        nextAlarm += config_.delay.offset;
+                    }
+                    else
+                    {
+                        TRACE("WakeUp : %d", nextAlarm);
+                    }
                     
                     log_.nextWakeUpTime = nextAlarm;
                     FI_TIME_setAlarm(nextAlarm);
@@ -712,8 +789,17 @@ RET_VALUE   CLIENT_loop(void)
                     nextClock = rtcTime.Hours * SECONDS_OF_HOUR + rtcTime.Minutes * SECONDS_OF_MINUTE + rtcTime.Seconds;
                 }
                 
+                if (config_.delay.enable && (config_.delay.mode == CLIENT_DELAY_MODE_WAKEUP_DELAY))
+                {
+                    TRACE("WakeUp : %d + %d", nextAlarm, config_.delay.offset);
+                    nextAlarm += config_.delay.offset;
+                }
+                else
+                {
+                    TRACE("WakeUp : %d", nextAlarm);
+                }
+
                 log_.nextWakeUpTime = nextAlarm;
-                TRACE("WakeUp : %d", nextAlarm);
                 FI_TIME_setAlarm(nextClock);
                 
                 CLIENT_setStatus(CLIENT_STATUS_READY_TO_SLEEP);
@@ -1000,4 +1086,52 @@ RET_VALUE   CLIENT_setId(char* Id)
 char*   CLIENT_getId(void)
 {   
     return  config_.id;
+}
+    
+RET_VALUE   CLIENT_setDelayBase(uint32_t base)
+{
+    config_.delay.base = base;
+
+    return  RET_OK;
+}
+    
+uint32_t    CLIENT_getDelayBase(void)
+{
+    return  config_.delay.base;
+}
+        
+RET_VALUE   CLIENT_setDelayMode(CLIENT_DELAY_MODE mode)
+{
+    config_.delay.mode = mode;
+
+    return  RET_OK;
+}
+    
+CLIENT_DELAY_MODE   CLIENT_getDelayMode(void)
+{
+    return  config_.delay.mode;
+}
+        
+RET_VALUE   CLIENT_setDelayPeriod(uint32_t period)
+{
+    config_.delay.period= period;
+
+    return  RET_OK;
+}
+    
+uint32_t    CLIENT_getDelayPeriod(void)
+{
+    return  config_.delay.period;
+}
+        
+RET_VALUE   CLIENT_setDelayOffset(uint32_t offset)
+{
+    config_.delay.offset= offset;
+
+    return  RET_OK;
+}
+    
+uint32_t    CLIENT_getDelayOffset(void)
+{
+    return  config_.delay.offset;
 }

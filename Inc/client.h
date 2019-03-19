@@ -13,6 +13,12 @@ typedef enum
     CLIENT_MODE_SLEEP_WITH_ALARM
 }   CLIENT_MODE;
 
+typedef enum
+{
+    CLIENT_DELAY_MODE_TRANSTER_DELAY = 0,
+    CLIENT_DELAY_MODE_WAKEUP_DELAY = 1
+}   CLIENT_DELAY_MODE;
+
 typedef struct
 {
     char        id[32];
@@ -40,6 +46,16 @@ typedef struct
             uint32_t    times[24];        
         } alarm;
     }   opMode;
+
+    struct
+    {
+        bool        enable;
+        uint32_t    base;
+        uint32_t    period;
+        CLIENT_DELAY_MODE    mode;
+        uint32_t    offset;
+    }   delay;
+    
 }   CLIENT_CONFIG;
 
 typedef enum    
@@ -48,13 +64,16 @@ typedef enum
     CLIENT_STATUS_REINIT,
     CLIENT_STATUS_SYSTEM_INIT_DONE,
     CLIENT_STATUS_READ_DATA,
-    
+    CLIENT_STATUS_READ_DATA_FINISHED,
+        
     CLIENT_STATUS_MODEM_INIT,
     CLIENT_STATUS_MODEM_WAKEUP,
     CLIENT_STATUS_MODEM_INIT_DONE,
     CLIENT_STATUS_MODEM_RESET,
     CLIENT_STATUS_MODEM_FINAL,
     CLIENT_STATUS_MODEM_DETACH,
+    
+    CLIENT_STATUS_CALCULATE_TRANSFER_OFFSET,
     
     CLIENT_STATUS_TIME_SYNC_START,
     CLIENT_STATUS_TIME_SYNC,
@@ -180,4 +199,14 @@ RET_VALUE   CLIENT_getNextAlarm(FI_TIME time, uint32_t *alarm);
 
 RET_VALUE   CLIENT_setId(char* Id);
 char*       CLIENT_getId(void);
+    
+    
+RET_VALUE   CLIENT_setDelayBase(uint32_t base);
+uint32_t    CLIENT_getDelayBase(void);
+RET_VALUE   CLIENT_setDelayMode(CLIENT_DELAY_MODE   mode);
+CLIENT_DELAY_MODE   CLIENT_getDelayMode(void);
+RET_VALUE   CLIENT_setDelayPeriod(uint32_t period);
+uint32_t    CLIENT_getDelayPeriod(void);
+RET_VALUE   CLIENT_setDelayOffset(uint32_t offset);
+uint32_t    CLIENT_getDelayOffset(void);
 #endif

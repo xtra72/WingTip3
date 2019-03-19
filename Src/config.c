@@ -53,7 +53,7 @@ const CONFIG  defaultConfig =
             .interval = 
             {
                 .start = 0,
-                .period = 300
+                .period = 600
             },
             .alarm = 
             {
@@ -63,7 +63,16 @@ const CONFIG  defaultConfig =
                     0,
                 }        
             }
-        }
+        },
+        .delay =
+        {
+            .enable = true,
+            .mode = CLIENT_DELAY_MODE_TRANSTER_DELAY,
+            .base = 300,
+            .period = 1,
+            .offset = 0
+        },    
+
     },
     .me_i10kl =
     {

@@ -21,6 +21,8 @@ RET_VALUE   ME_I10KL_stop(void);
 
 RET_VALUE   ME_I10KL_getVersion(char* version, uint32_t maxVersionLength);
 
+RET_VALUE   ME_I10KL_getIMEI(char* imei, uint32_t length);
+
 RET_VALUE   ME_I10KL_attach(void);
 RET_VALUE   ME_I10KL_detach(void);
 
