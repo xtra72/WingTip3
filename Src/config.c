@@ -69,7 +69,7 @@ const CONFIG  defaultConfig =
             .enable = true,
             .mode = CLIENT_DELAY_MODE_TRANSTER_DELAY,
             .base = 300,
-            .period = 1,
+            .period = 180,
             .offset = 0
         },    
 

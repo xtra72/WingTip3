@@ -30,6 +30,8 @@ extern  char    *CONFIG_SHELL_BANNER[];
 #define CONFIG_DEFAULT_SERVER_PORT      1883
 #define CONFIG_DEFAULT_TOPIC            "dhi/energy"
 
+#define CONFIG_CLIENT_PERIOD_MIN        18
+
 #define CONFIG_SHELL_STACK_SIZE 256
 #define CONFIG_SHELL_PRIORITY   osPriorityNormal
 

@@ -493,9 +493,12 @@ RET_VALUE   CLIENT_loop(void)
                 }
 
                 if (value != 0)
-                {
-                    config_.delay.offset = (value % config_.delay.base) * config_.delay.period;
-                
+                {                 
+                    uint32_t count = (config_.delay.period + CONFIG_CLIENT_PERIOD_MIN - 1) / CONFIG_CLIENT_PERIOD_MIN;
+                    
+                    config_.delay.offset = value % config_.delay.base * config_.delay.period + ((value / config_.delay.base) % count) * CONFIG_CLIENT_PERIOD_MIN;
+
+                    TRACE("Group ID : %d, Index : %d, Offset : %d", value % config_.delay.base, ((value / config_.delay.base) % count),  config_.delay.offset);
                     SYSTEM_globalConfigSave();
                 }
 
@@ -772,22 +775,20 @@ RET_VALUE   CLIENT_loop(void)
             {
                 if (currentTime < intervalStartTime)
                 {
-                    if (intervalStartTime - currentTime > SECONDS_OF_DAY)
-                    {   
-                        nextClock = 0;
-                    }
-                    else 
-                    {
-                        FI_TIME_toRTCDateTime(intervalStartTime, &rtcTime, &rtcDate);
-                        nextClock = rtcTime.Hours * SECONDS_OF_HOUR + rtcTime.Minutes * SECONDS_OF_MINUTE + rtcTime.Seconds;
-                    }
+                    nextAlarm = intervalStartTime;
                 }
                 else 
                 {
                     nextAlarm = intervalStartTime + ((currentTime - intervalStartTime) / CLIENT_getIntervalPeriod() + 1) * CLIENT_getIntervalPeriod();
-                    FI_TIME_toRTCDateTime(nextAlarm, &rtcTime, &rtcDate);
-                    nextClock = rtcTime.Hours * SECONDS_OF_HOUR + rtcTime.Minutes * SECONDS_OF_MINUTE + rtcTime.Seconds;
                 }
+
+                if (config_.delay.enable && (config_.delay.mode == CLIENT_DELAY_MODE_WAKEUP_DELAY))
+                {
+                    TRACE("WakeUp : %d + %d", nextAlarm, config_.delay.offset);
+                    nextAlarm += config_.delay.offset;
+                }
+                FI_TIME_toRTCDateTime(nextAlarm, &rtcTime, &rtcDate);
+                nextClock = rtcTime.Hours * SECONDS_OF_HOUR + rtcTime.Minutes * SECONDS_OF_MINUTE + rtcTime.Seconds;
                 
                 if (config_.delay.enable && (config_.delay.mode == CLIENT_DELAY_MODE_WAKEUP_DELAY))
                 {
