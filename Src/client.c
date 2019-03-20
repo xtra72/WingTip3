@@ -348,8 +348,7 @@ RET_VALUE   CLIENT_loop(void)
                 length += sprintf(&buffer_[length], ",\"SC\":\"%s%d.%02d\"", (data_.current.S < 0)?"-":"", abs(data_.current.S / 100), abs(data_.current.S % 100));
                 length += sprintf(&buffer_[length], ",\"TC\":\"%s%d.%02d\"", (data_.current.T < 0)?"-":"", abs(data_.current.T / 100), abs(data_.current.T % 100));
                 length += sprintf(&buffer_[length], ",\"TEW\":\"%s%d.%02d\"", (data_.totalPower < 0)?"-":"", abs(data_.totalPower / 100), abs(data_.totalPower % 100));
-                //length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
-                length += sprintf(&buffer_[length], ",\"TEWH\":\"%d.%02d\"", abs(data_.totalEnergy / 100), abs(data_.totalEnergy % 100));
+                length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
                 length += sprintf(&buffer_[length], "}");
 
                 FI_TIME_get(&log_.device.dataTime);
@@ -477,6 +476,7 @@ RET_VALUE   CLIENT_loop(void)
         
     case    CLIENT_STATUS_CALCULATE_TRANSFER_OFFSET:
         {
+#if 0
             char    imei[32];
                 
             memset(imei, 0, sizeof(imei));
@@ -521,7 +521,29 @@ RET_VALUE   CLIENT_loop(void)
                     TRACE("Modem initialization retry : %d\n", retryCount_);
                 }
             }
+#else
+            uint32_t    value = 0;
+            if (strlen(config_.id) == 0)
+            {
+                value = 1;
+            }
+            else
+            {
+                strToUint32(&config_.id[strlen(config_.id) - 5], &value);
+            }
 
+            if (value != 0)
+            {                 
+                uint32_t count = (config_.delay.period + CONFIG_CLIENT_PERIOD_MIN - 1) / CONFIG_CLIENT_PERIOD_MIN;
+                
+                config_.delay.offset = value % config_.delay.base * config_.delay.period + ((value / config_.delay.base) % count) * CONFIG_CLIENT_PERIOD_MIN;
+
+                TRACE("Group ID : %d, Index : %d, Offset : %d", value % config_.delay.base, ((value / config_.delay.base) % count),  config_.delay.offset);
+                SYSTEM_globalConfigSave();
+            }
+
+            CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);                
+#endif
         }
         break;
         
