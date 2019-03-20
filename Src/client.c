@@ -348,7 +348,8 @@ RET_VALUE   CLIENT_loop(void)
                 length += sprintf(&buffer_[length], ",\"SC\":\"%s%d.%02d\"", (data_.current.S < 0)?"-":"", abs(data_.current.S / 100), abs(data_.current.S % 100));
                 length += sprintf(&buffer_[length], ",\"TC\":\"%s%d.%02d\"", (data_.current.T < 0)?"-":"", abs(data_.current.T / 100), abs(data_.current.T % 100));
                 length += sprintf(&buffer_[length], ",\"TEW\":\"%s%d.%02d\"", (data_.totalPower < 0)?"-":"", abs(data_.totalPower / 100), abs(data_.totalPower % 100));
-                length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
+                //length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
+                length += sprintf(&buffer_[length], ",\"TEWH\":\"%d.%02d\"", abs(data_.totalEnergy / 100), abs(data_.totalEnergy % 100));
                 length += sprintf(&buffer_[length], "}");
 
                 FI_TIME_get(&log_.device.dataTime);

@@ -17,6 +17,7 @@ RET_VALUE SHELL_DEVICE_baudrate(char *argv[], uint32_t argc, struct _SHELL_COMMA
 RET_VALUE SHELL_DEVICE_parity(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_DEVICE_databit(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_DEVICE_stopbit(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
+RET_VALUE SHELL_DEVICE_swap(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_DEVICE_help(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 
 RET_VALUE SHELL_DEVICE_printConfig(DEVICE_CONFIG* config);
@@ -61,6 +62,11 @@ static SHELL_COMMAND   commandSet_[] =
         .shortHelp = "Stop Bit"
     },
 #endif
+    {   
+        .name = "swap",     
+        .function = SHELL_DEVICE_swap,         
+        .shortHelp = "Swap"
+    },
     {   
         .name = "help",     
         .function = SHELL_DEVICE_help,         
@@ -124,7 +130,8 @@ RET_VALUE SHELL_DEVICE_read(char *argv[], uint32_t argc, struct _SHELL_COMMAND c
             SHELL_printf("%4s : %s%d.%02d\n", "T", (data.current.T < 0)?"-":"", abs(data.current.T / 100), abs(data.current.T % 100));
 
             SHELL_printf("%12s : %s%d.%02d\n", "Total Power", (data.totalPower < 0)?"-":"", abs(data.totalPower / 100), abs(data.totalPower % 100));
-            SHELL_printf("%12s : %d\n", "Total Energy", data.totalEnergy );
+            //SHELL_printf("%12s : %d\n", "Total Energy", data.totalEnergy );
+            SHELL_printf("%12s : %d.%02d\n", "Total Energy", abs(data.totalEnergy / 100), abs(data.totalEnergy % 100));
             /*SHELL_printf("Voltage\n");
             SHELL_printf("%4s : %3d.%02d\n", "RS", data.voltage.RS / 100, data.voltage.RS % 100);
             SHELL_printf("%4s : %3d.%02d\n", "ST", data.voltage.ST / 100, data.voltage.ST % 100);
@@ -160,7 +167,8 @@ RET_VALUE SHELL_DEVICE_read(char *argv[], uint32_t argc, struct _SHELL_COMMAND c
             SHELL_printf("%4s : %s%d.%02d\n", "T", (data.current.T < 0)?"-":"", abs(data.current.T / 100), abs(data.current.T % 100));
 
             SHELL_printf("%12s : %s%d.%02d\n", "Total Power", (data.totalPower < 0)?"-":"", abs(data.totalPower / 100), abs(data.totalPower % 100));
-            SHELL_printf("%12s : %d\n", "Total Energy", data.totalEnergy );
+            //SHELL_printf("%12s : %d\n", "Total Energy", data.totalEnergy );
+            SHELL_printf("%12s : %d.%02d\n", "Total Energy", abs(data.totalEnergy / 100), abs(data.totalEnergy % 100));
             /*
             SHELL_printf("Voltage\n");
             SHELL_printf("%4s : %3d.%02d\n", "RS", data.voltage.RS / 100, data.voltage.RS % 100);
@@ -409,11 +417,47 @@ RET_VALUE SHELL_DEVICE_stopbit(char *argv[], uint32_t argc, struct _SHELL_COMMAN
     return  ret;
 }
 
+RET_VALUE SHELL_DEVICE_swap(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command)
+{
+    RET_VALUE   ret = RET_INVALID_ARGUMENT;
+    
+    if (argc == 1)
+    {
+        SHELL_printf("%s\n", DEVICE_getSwap()?"ON":"OFF");
+    }
+    else if (argc == 2)
+    {
+        if (strcasecmp(argv[1], "help") == 0)
+        {
+            SHELL_printf("USAGE\n");
+            SHELL_printf("  %s [on|off]\n", argv[0]);
+            ret = RET_OK;
+        }
+        else if ((strcasecmp(argv[1], "enable") == 0) ||
+            (strcasecmp(argv[1], "on") == 0) ||
+            (strcasecmp(argv[1], "1") == 0))
+        {
+            DEVICE_setSwap(true);
+            ret = RET_OK;
+        }
+        else if ((strcasecmp(argv[1], "disable") == 0) ||
+                 (strcasecmp(argv[1], "off") == 0) ||
+                 (strcasecmp(argv[1], "0") == 0))
+        {
+            DEVICE_setSwap(false);
+            ret = RET_OK;
+        }
+    }
+
+    return ret;
+}
+
 RET_VALUE   SHELL_DEVICE_printConfig(DEVICE_CONFIG* config)
 {
     ASSERT(config != NULL);
     
     SHELL_printf("%16s : %d\n", "ID", config->id);
+    SHELL_printf("%16s : %s\n", "SWAP", DEVICE_getSwap()?"ON":"OFF");
     SHELL_printf("%16s : %s(%d)\n", "Type", DEVICE_getTypeName(config->type), config->type);
     SHELL_printf("%16s : %s\n", "Baudrate", SERIAL_baudrateName(config->serial.baudrate));
     SHELL_printf("%16s : %s\n", "Parity", SERIAL_parityName(config->serial.parity));

@@ -18,6 +18,7 @@ typedef enum
 typedef struct 
 {
     uint32_t         id;
+    bool            swap;   //GIPAM device have swap function
     DEVICE_TYPE     type;
     SERIAL_CONFIG   serial;
     uint32_t        timeout;
@@ -48,7 +49,7 @@ typedef struct
     }   current;
     
     int32_t     totalPower;
-    int32_t     totalEnergy;
+    uint32_t     totalEnergy;
 }   DEVICE_DATA;
 
 
@@ -83,4 +84,6 @@ RET_VALUE   DEVICE_readHoldingRegisters(uint8_t id, uint8_t function, uint16_t a
 
 RET_VALUE   DEVICE_readData(DEVICE_DATA* data, uint32_t timeout);
 
+bool        DEVICE_getSwap(void);
+RET_VALUE   DEVICE_setSwap(bool swap);
 #endif

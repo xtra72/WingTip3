@@ -90,6 +90,7 @@ const CONFIG  defaultConfig =
     .device = 
     {
         .id = CONFIG_DEFAULT_DEVICE_ID,
+        .swap = CONFIG_DEFAULT_DEVICE_SWAP,
         .type = CONFIG_DEFAULT_DEVICE_TYPE,
         .serial = 
         {

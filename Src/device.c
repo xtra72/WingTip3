@@ -69,7 +69,7 @@ static const DEVICE_DESCRIPTION  deviceDescriptions[] =
         .serial = 
         {
             .port = SERIAL_PORT_3,
-            .baudrate = SERIAL_BAUDRATE_38400,
+            .baudrate = SERIAL_BAUDRATE_9600,
             .parity = SERIAL_PARITY_NONE,
             .dataBits = SERIAL_DATA_BITS_8,
             .stopBits = SERIAL_STOP_BITS_1
@@ -264,6 +264,18 @@ RET_VALUE   DEVICE_setTimeout(uint32_t timeout)
     return  RET_OK;
 }
 
+bool    DEVICE_getSwap(void)
+{
+    return  config_.timeout;
+}
+
+RET_VALUE   DEVICE_setSwap(bool swap)
+{
+    config_.swap = swap;
+    
+    return  RET_OK;
+}
+
 //RET_VALUE   DEVICE_readHoldingRegisters(uint8_t id, uint16_t address, uint16_t count, uint16_t *registers, uint32_t timeout)
 RET_VALUE   DEVICE_readHoldingRegisters(uint8_t id, uint8_t function, uint16_t address, uint16_t count, uint16_t *registers, uint32_t timeout)
 {
@@ -369,29 +381,62 @@ RET_VALUE   DEVICE_GIPAM2000_readData(DEVICE_DATA* data, uint32_t timeout)
         return  ret;
     }
     osDelay(10);
-    int32_t value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
-    data->voltage.RS = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+    int32_t value = 0;
+    if(config_.swap == false)
+    {
+      value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
+      data->voltage.RS = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+      
+      value = (int32_t)(((uint32_t)registers_[2] << 16) | ((uint32_t)registers_[3]));
+      data->voltage.ST = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+      
+      value = (int32_t)(((uint32_t)registers_[4] << 16) | ((uint32_t)registers_[5]));
+      data->voltage.TR = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+    }
+    else
+    {
+      int32_t value = (int32_t)(((uint32_t)registers_[1] << 16) | ((uint32_t)registers_[0]));
+      data->voltage.RS = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
 
-    value = (int32_t)(((uint32_t)registers_[2] << 16) | ((uint32_t)registers_[3]));
-    data->voltage.ST = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+      value = (int32_t)(((uint32_t)registers_[3] << 16) | ((uint32_t)registers_[2]));
+      data->voltage.ST = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
 
-    value = (int32_t)(((uint32_t)registers_[4] << 16) | ((uint32_t)registers_[5]));
-    data->voltage.TR = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
-osDelay(10);
+      value = (int32_t)(((uint32_t)registers_[5] << 16) | ((uint32_t)registers_[4]));
+      data->voltage.TR = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+    }
+    
+    
+    
+    osDelay(10);
     ret = DEVICE_readHoldingRegisters(config_.id, DEVICE_READ_INPUT_REGISTER, 20, 6, registers_, timeout);
     if (ret != RET_OK)
     {
         return  ret;
     }
     
-    value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
-    data->current.R = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+    if(config_.swap == false)
+    {
+      value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
+      data->current.R = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
 
-    value = (int32_t)(((uint32_t)registers_[2] << 16) | ((uint32_t)registers_[3]));
-    data->current.S = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+      value = (int32_t)(((uint32_t)registers_[2] << 16) | ((uint32_t)registers_[3]));
+      data->current.S = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
 
-    value = (int32_t)(((uint32_t)registers_[4] << 16) | ((uint32_t)registers_[5]));
-    data->current.T = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+      value = (int32_t)(((uint32_t)registers_[4] << 16) | ((uint32_t)registers_[5]));
+      data->current.T = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+    }
+    else
+    {
+      value = (int32_t)(((uint32_t)registers_[1] << 16) | ((uint32_t)registers_[0]));
+      data->current.R = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+
+      value = (int32_t)(((uint32_t)registers_[3] << 16) | ((uint32_t)registers_[2]));
+      data->current.S = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+
+      value = (int32_t)(((uint32_t)registers_[5] << 16) | ((uint32_t)registers_[4]));
+      data->current.T = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);
+    }
+
     osDelay(10);
     ret = DEVICE_readHoldingRegisters(config_.id, DEVICE_READ_INPUT_REGISTER, 38, 2, registers_, timeout);
     if (ret != RET_OK)
@@ -399,20 +444,38 @@ osDelay(10);
         return  ret;
     }
     
-    value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
-    //data->totalPower = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);  // GIPAM2K totalPower W
-	data->totalPower = (int32_t)(IEEE754_Binary32ToDouble(value) * 0.001 * 100); // GIPAM2K totalPower KW
-osDelay(10);
+    if(config_.swap == false)
+    {
+      value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
+      //data->totalPower = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);  // GIPAM2K totalPower W
+      data->totalPower = (int32_t)(IEEE754_Binary32ToDouble(value) * 0.001 * 100); // GIPAM2K totalPower KW
+    }
+    else
+    {
+      value = (int32_t)(((uint32_t)registers_[1] << 16) | ((uint32_t)registers_[0]));
+      //data->totalPower = (int32_t)(IEEE754_Binary32ToDouble(value) * 100);  // GIPAM2K totalPower W
+      data->totalPower = (int32_t)(IEEE754_Binary32ToDouble(value) * 0.001 * 100); // GIPAM2K totalPower KW
+    }
+    
+    osDelay(10);
     ret = DEVICE_readHoldingRegisters(config_.id, DEVICE_READ_INPUT_REGISTER, 48, 2, registers_, timeout);
     if (ret != RET_OK)
     {
         return  ret;
     }
     
-    value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
-    //data->totalEnergy = (int32_t)(IEEE754_Binary32ToDouble(value) * 100); // GIPAM2K totalEnergy Wh
-	data->totalEnergy = (int32_t)(IEEE754_Binary32ToDouble(value) * 0.001); // GIPAM2K totalEnergy KWh
-	
+    if(config_.swap == false)
+    {
+      value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
+      //data->totalEnergy = (int32_t)(IEEE754_Binary32ToDouble(value) * 100); // GIPAM2K totalEnergy Wh
+      data->totalEnergy = (uint32_t)(IEEE754_Binary32ToDouble(value) * 0.001 * 100); // GIPAM2K totalEnergy KWh
+    }
+    else
+    {
+      value = (int32_t)(((uint32_t)registers_[1] << 16) | ((uint32_t)registers_[0]));
+      //data->totalEnergy = (int32_t)(IEEE754_Binary32ToDouble(value) * 100); // GIPAM2K totalEnergy Wh
+      data->totalEnergy = (uint32_t)(IEEE754_Binary32ToDouble(value) * 0.001 * 100); // GIPAM2K totalEnergy KWh
+    }
     return  ret;
 }
 
@@ -467,7 +530,8 @@ RET_VALUE   DEVICE_ACURRA_A3300_readData(DEVICE_DATA* data, uint32_t timeout)
         return  ret;
     }
     
-    data->totalEnergy = ((int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1])));
+    //data->totalEnergy = ((int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1])));
+    data->totalEnergy = ((uint32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]) * 100));
 
     return  ret;
 }
@@ -516,9 +580,13 @@ RET_VALUE   DEVICE_ACURRA_A3300_readData2(DEVICE_DATA* data, uint32_t timeout)
         return  ret;
     }
     
-    value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
+    /*value = (int32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
     //data->totalEnergy = (int32_t)(IEEE754_Binary32ToDouble(value));
-	data->totalEnergy = value;
+	data->totalEnergy = value;*/
+    
+    uint32_t u_value = (uint32_t)(((uint32_t)registers_[0] << 16) | ((uint32_t)registers_[1]));
+    //data->totalEnergy = (int32_t)(IEEE754_Binary32ToDouble(value));
+	data->totalEnergy = u_value * 100;
     return  ret;
 }
 
@@ -537,8 +605,8 @@ RET_VALUE   DEVICE_LS_HCUM_readData(DEVICE_DATA* data, uint32_t timeout)
     hcum_request[0] = 0x01;                                     //SOH : always 01h
     hcum_request[1] = 0x44;                                     //CMD 'D' : request = 'D', response = 'd'
     hcum_request[2] = 0x02;                                     //STX : always 02h
-    hcum_request[3] = 0x00;                                     //Routers MSB
-    hcum_request[4] = 0x00;                                     //Routers LSB
+    hcum_request[3] = 0x30;                                     //Routers MSB
+    hcum_request[4] = 0x30;                                     //Routers LSB
     // HCU ID = #1#2#3#4#5 (5th interger) -> ASCII
     hcum_request[5] = (config_.id / 10000) + 0x30;              // HCU ID #1
     hcum_request[6] = ((config_.id % 10000) / 1000 ) + 0x30;    // HCU ID #2
@@ -639,7 +707,7 @@ RET_VALUE   DEVICE_LS_HCUM_readData(DEVICE_DATA* data, uint32_t timeout)
         uint8_t data_str[10];
         memset(data_str, 0x00, sizeof(data_str));
         memcpy(data_str, &hcum_response[8], 9);
-        data->totalEnergy = (int32_t)(atoi((char*)data_str) * 0.001 * 100);
+        data->totalEnergy = (int32_t)(atoi((char*)data_str) * 0.01 * 100);
     }
 
     return  ret;
