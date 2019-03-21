@@ -53,6 +53,7 @@ typedef struct
         uint32_t    base;
         uint32_t    period;
         CLIENT_DELAY_MODE    mode;
+        uint32_t    member;
         uint32_t    offset;
     }   delay;
     
@@ -207,6 +208,8 @@ RET_VALUE   CLIENT_setDelayMode(CLIENT_DELAY_MODE   mode);
 CLIENT_DELAY_MODE   CLIENT_getDelayMode(void);
 RET_VALUE   CLIENT_setDelayPeriod(uint32_t period);
 uint32_t    CLIENT_getDelayPeriod(void);
+RET_VALUE   CLIENT_setDelayMember(uint32_t member);
+uint32_t    CLIENT_getDelayMember(void);
 RET_VALUE   CLIENT_setDelayOffset(uint32_t offset);
 uint32_t    CLIENT_getDelayOffset(void);
 #endif

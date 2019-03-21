@@ -67,9 +67,10 @@ const CONFIG  defaultConfig =
         .delay =
         {
             .enable = true,
-            .mode = CLIENT_DELAY_MODE_TRANSTER_DELAY,
-            .base = 300,
-            .period = 180,
+            .mode = CLIENT_DELAY_MODE_WAKEUP_DELAY,
+            .base = 180,
+            .period = 240,
+            .member = 24,
             .offset = 0
         },    
 

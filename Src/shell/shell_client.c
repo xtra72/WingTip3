@@ -784,6 +784,7 @@ RET_VALUE   SHELL_CLIENT_printConfig(CLIENT_CONFIG* config)
             SHELL_printf("%16s : %s\n", "Mode", "WakeUp Delay");
         }
         SHELL_printf("%16s : %d\n", "Period", config->delay.period);
+        SHELL_printf("%16s : %d\n", "Member", config->delay.member);
         SHELL_printf("%16s : %d\n", "Offset", config->delay.offset);
     }
     
@@ -855,6 +856,7 @@ RET_VALUE SHELL_CLIENT_delay(char *argv[], uint32_t argc, struct _SHELL_COMMAND 
                 SHELL_printf("%16s : %s\n", "Mode", "WakeUp Delay");
             }
             SHELL_printf("%16s : %d\n", "Period", config.delay.period);
+            SHELL_printf("%16s : %d\n", "Member", config.delay.member);
             SHELL_printf("%16s : %d\n", "Offset", config.delay.offset);
         }
     }
@@ -882,6 +884,14 @@ RET_VALUE SHELL_CLIENT_delay(char *argv[], uint32_t argc, struct _SHELL_COMMAND 
             if (strToUint32(argv[2], &value))
             {
                 ret = CLIENT_setDelayPeriod(value);
+            }
+        }
+        else if (strcasecmp(argv[1], "member") == 0)
+        {
+            uint32_t    value;
+            if (strToUint32(argv[2], &value))
+            {
+                ret = CLIENT_setDelayMember(value);
             }
         }
         else if (strcasecmp(argv[1], "offset") == 0)

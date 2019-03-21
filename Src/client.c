@@ -313,8 +313,15 @@ RET_VALUE   CLIENT_loop(void)
         {
             TRACE("External Power ON\n");
             SYS_setExtPower(true);
-            CLIENT_setStatus(CLIENT_STATUS_READ_DATA);
             retryCount_ = 0;
+            if (config_.delay.enable && (config_.delay.base != 0)&& (config_.delay.offset == 0))
+            {
+                CLIENT_setStatus(CLIENT_STATUS_CALCULATE_TRANSFER_OFFSET);
+            }
+            else
+            {
+                CLIENT_setStatus(CLIENT_STATUS_READ_DATA);
+            }
         }
         break;
 
@@ -446,14 +453,15 @@ RET_VALUE   CLIENT_loop(void)
                 FI_TIME_get(&log_.modem.initFinishedTime);
                 TRACE("Modem initialization complete!\n");
                 
-                if (config_.delay.enable && (config_.delay.base != 0)&& (config_.delay.offset == 0))
+                /*if (config_.delay.enable && (config_.delay.base != 0)&& (config_.delay.offset == 0))
                 {
                     CLIENT_setStatus(CLIENT_STATUS_CALCULATE_TRANSFER_OFFSET);
                 }
                 else
                 {
                     CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);
-                }
+                }*/
+                CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);
             }
             else 
             {
@@ -503,7 +511,7 @@ RET_VALUE   CLIENT_loop(void)
                     SYSTEM_globalConfigSave();
                 }
 
-                CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);                
+                CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);      
             }
             else 
             {
@@ -534,15 +542,22 @@ RET_VALUE   CLIENT_loop(void)
 
             if (value != 0)
             {                 
-                uint32_t count = (config_.delay.period + CONFIG_CLIENT_PERIOD_MIN - 1) / CONFIG_CLIENT_PERIOD_MIN;
+                //uint32_t count = (config_.delay.period + CONFIG_CLIENT_PERIOD_MIN - 1) / CONFIG_CLIENT_PERIOD_MIN;
                 
-                config_.delay.offset = value % config_.delay.base * config_.delay.period + ((value / config_.delay.base) % count) * CONFIG_CLIENT_PERIOD_MIN;
+                //config_.delay.offset = value % config_.delay.base * config_.delay.period + ((value / config_.delay.base) % count) * CONFIG_CLIENT_PERIOD_MIN;
+
+                uint32_t client_period_min = config_.delay.period / config_.delay.member;
+                
+                uint32_t count = (config_.delay.period + client_period_min - 1) / client_period_min;
+                
+                config_.delay.offset = value % config_.delay.base * config_.delay.period + ((value / config_.delay.base) % count) * client_period_min;
 
                 TRACE("Group ID : %d, Index : %d, Offset : %d", value % config_.delay.base, ((value / config_.delay.base) % count),  config_.delay.offset);
                 SYSTEM_globalConfigSave();
             }
 
-            CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);                
+            //CLIENT_setStatus(CLIENT_STATUS_TIME_SYNC_START);
+            CLIENT_setStatus(CLIENT_STATUS_READ_DATA);
 #endif
         }
         break;
@@ -670,7 +685,8 @@ RET_VALUE   CLIENT_loop(void)
             length += sprintf(&buffer_[length], ",\"SC\":\"%s%d.%02d\"", (data_.current.S < 0)?"-":"", abs(data_.current.S / 100), abs(data_.current.S % 100));
             length += sprintf(&buffer_[length], ",\"TC\":\"%s%d.%02d\"", (data_.current.T < 0)?"-":"", abs(data_.current.T / 100), abs(data_.current.T % 100));
             length += sprintf(&buffer_[length], ",\"TEW\":\"%s%d.%02d\"", (data_.totalPower < 0)?"-":"", abs(data_.totalPower / 100), abs(data_.totalPower % 100));
-            length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
+            //length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
+            length += sprintf(&buffer_[length], ",\"TEWH\":\"%d.%02d\"", abs(data_.totalEnergy / 100), abs(data_.totalEnergy % 100));
             length += sprintf(&buffer_[length], "}");
             
             ret = CLIENT_MQTT_pub(config_.server.topic, buffer_);
@@ -1146,6 +1162,18 @@ RET_VALUE   CLIENT_setDelayPeriod(uint32_t period)
 uint32_t    CLIENT_getDelayPeriod(void)
 {
     return  config_.delay.period;
+}
+
+RET_VALUE   CLIENT_setDelayMember(uint32_t member)
+{
+    config_.delay.member= member;
+
+    return  RET_OK;
+}
+    
+uint32_t    CLIENT_getDelayMember(void)
+{
+    return  config_.delay.member;
 }
         
 RET_VALUE   CLIENT_setDelayOffset(uint32_t offset)

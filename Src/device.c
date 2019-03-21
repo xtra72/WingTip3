@@ -266,7 +266,7 @@ RET_VALUE   DEVICE_setTimeout(uint32_t timeout)
 
 bool    DEVICE_getSwap(void)
 {
-    return  config_.timeout;
+    return  config_.swap;
 }
 
 RET_VALUE   DEVICE_setSwap(bool swap)
