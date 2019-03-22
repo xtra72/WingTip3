@@ -24,6 +24,7 @@ RET_VALUE SHELL_CLIENT_help(char *argv[], uint32_t argc, struct _SHELL_COMMAND c
 RET_VALUE SHELL_CLIENT_retryCount(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_CLIENT_Id(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 RET_VALUE SHELL_CLIENT_delay(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
+RET_VALUE SHELL_CLIENT_message(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command);
 
 static SHELL_COMMAND   commandSet_[] = 
 {
@@ -91,6 +92,11 @@ static SHELL_COMMAND   commandSet_[] =
         .name = "id",     
         .function = SHELL_CLIENT_Id,         
         .shortHelp = "Id"
+    },
+    {
+        .name = "message",
+        .function = SHELL_CLIENT_message,
+        .shortHelp = "Message"
     },
     {
         .name = NULL,     
@@ -787,6 +793,12 @@ RET_VALUE   SHELL_CLIENT_printConfig(CLIENT_CONFIG* config)
         SHELL_printf("%16s : %d\n", "Member", config->delay.member);
         SHELL_printf("%16s : %d\n", "Offset", config->delay.offset);
     }
+    SHELL_printf("%16s\n", "Message Setting");
+    SHELL_printf("%16s : %s\n", "Voltage", config->message.voltage?"Enable":"Disable");
+    SHELL_printf("%16s : %s\n", "Current", config->message.current?"Enable":"Disable");
+    SHELL_printf("%16s : %s\n", "Power", config->message.power?"Enable":"Disable");
+    SHELL_printf("%16s : %s\n", "Energy", config->message.energy?"Enable":"Disable");
+    
     
     return  RET_OK;
 }
@@ -903,6 +915,114 @@ RET_VALUE SHELL_CLIENT_delay(char *argv[], uint32_t argc, struct _SHELL_COMMAND 
             }
         }
         
+    }
+        
+    return  ret;
+}
+
+RET_VALUE SHELL_CLIENT_message(char *argv[], uint32_t argc, struct _SHELL_COMMAND const* command)
+{
+    RET_VALUE   ret = RET_INVALID_ARGUMENT;
+    CLIENT_CONFIG   config;
+    
+    if (argc == 1)
+    {
+        CLIENT_getConfig(&config);
+
+        SHELL_printf("%16s\n", "Message Setting");
+        SHELL_printf("%16s : %s\n", "Voltage", config.message.voltage?"Enable":"Disable");
+        SHELL_printf("%16s : %s\n", "Current", config.message.current?"Enable":"Disable");
+        SHELL_printf("%16s : %s\n", "Power", config.message.power?"Enable":"Disable");
+        SHELL_printf("%16s : %s\n", "Energy", config.message.energy?"Enable":"Disable");
+    }
+    else if (argc == 3)
+    {
+        if (strcasecmp(argv[1], "voltage") == 0)
+        {
+ 
+            if ((strcasecmp(argv[2], "enable") == 0) ||
+                (strcasecmp(argv[2], "on") == 0) ||
+                (strcasecmp(argv[2], "1") == 0))
+            {
+                ret = CLIENT_setMessageVoltage(true);
+            }
+            else if ((strcasecmp(argv[2], "disable") == 0) ||
+                 (strcasecmp(argv[2], "off") == 0) ||
+                 (strcasecmp(argv[2], "0") == 0))
+            {
+                ret = CLIENT_setMessageVoltage(false);
+            }
+        }
+        else if (strcasecmp(argv[1], "current") == 0)
+        {
+       
+            if ((strcasecmp(argv[2], "enable") == 0) ||
+                (strcasecmp(argv[2], "on") == 0) ||
+                (strcasecmp(argv[2], "1") == 0))
+            {
+                ret = CLIENT_setMessageCurrent(true);
+            }
+            else if ((strcasecmp(argv[2], "disable") == 0) ||
+                 (strcasecmp(argv[2], "off") == 0) ||
+                 (strcasecmp(argv[2], "0") == 0))
+            {
+                ret = CLIENT_setMessageCurrent(false);
+            }
+        }
+        else if (strcasecmp(argv[1], "power") == 0)
+        {
+
+            if ((strcasecmp(argv[2], "enable") == 0) ||
+                (strcasecmp(argv[2], "on") == 0) ||
+                (strcasecmp(argv[2], "1") == 0))
+            {
+                ret = CLIENT_setMessagePower(true);
+            }
+            else if ((strcasecmp(argv[2], "disable") == 0) ||
+                 (strcasecmp(argv[2], "off") == 0) ||
+                 (strcasecmp(argv[2], "0") == 0))
+            {
+                ret = CLIENT_setMessagePower(false);
+            }
+        }
+        else if (strcasecmp(argv[1], "energy") == 0)
+        {
+
+            if ((strcasecmp(argv[2], "enable") == 0) ||
+                (strcasecmp(argv[2], "on") == 0) ||
+                (strcasecmp(argv[2], "1") == 0))
+            {
+                ret = CLIENT_setMessageEnergy(true);
+            }
+            else if ((strcasecmp(argv[2], "disable") == 0) ||
+                 (strcasecmp(argv[2], "off") == 0) ||
+                 (strcasecmp(argv[2], "0") == 0))
+            {
+                ret = CLIENT_setMessageEnergy(false);
+            }
+        }
+        else if (strcasecmp(argv[1], "all") == 0)
+        {
+    
+            if ((strcasecmp(argv[2], "enable") == 0) ||
+                (strcasecmp(argv[2], "on") == 0) ||
+                (strcasecmp(argv[2], "1") == 0))
+            {
+                ret = CLIENT_setMessageVoltage(true);
+                ret = CLIENT_setMessageCurrent(true);
+                ret = CLIENT_setMessagePower(true);
+                ret = CLIENT_setMessageEnergy(true);
+            }
+            else if ((strcasecmp(argv[2], "disable") == 0) ||
+                 (strcasecmp(argv[2], "off") == 0) ||
+                 (strcasecmp(argv[2], "0") == 0))
+            {
+                ret = CLIENT_setMessageVoltage(false);
+                ret = CLIENT_setMessageCurrent(false);
+                ret = CLIENT_setMessagePower(false);
+                ret = CLIENT_setMessageEnergy(false);
+            }
+        }
     }
         
     return  ret;

@@ -57,6 +57,13 @@ typedef struct
         uint32_t    offset;
     }   delay;
     
+    struct
+    {
+        bool    voltage;
+        bool    current;
+        bool    power;
+        bool    energy;
+    } message;
 }   CLIENT_CONFIG;
 
 typedef enum    
@@ -214,4 +221,16 @@ RET_VALUE   CLIENT_setDelayOffset(uint32_t offset);
 uint32_t    CLIENT_getDelayOffset(void);
 
 RET_VALUE   CLIENT_getTime(FI_TIME time, uint32_t* curTime);
+
+RET_VALUE   CLIENT_setMessageVoltage(bool  voltage);
+bool    CLIENT_getMessageVoltage(void);
+
+RET_VALUE   CLIENT_setMessageCurrent(bool  current);
+bool    CLIENT_getMessageCurrent(void);
+
+RET_VALUE   CLIENT_setMessagePower(bool  power);
+bool    CLIENT_getMessagePower(void);
+
+RET_VALUE   CLIENT_setMessageEnergy(bool  energy);
+bool    CLIENT_getMessageEnergy(void);
 #endif

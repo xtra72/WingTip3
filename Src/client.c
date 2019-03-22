@@ -678,15 +678,27 @@ RET_VALUE   CLIENT_loop(void)
             length = sprintf(buffer_, "{");
             //length += sprintf(&buffer_[length], "\"ts\":%d,", time_);
             length += sprintf(&buffer_[length], "\"ID\":\"%s\"", config_.id);
-            length += sprintf(&buffer_[length], ",\"RSV\":\"%s%d.%02d\"", (data_.voltage.RS < 0)?"-":"", abs(data_.voltage.RS / 100), abs(data_.voltage.RS % 100));
-            length += sprintf(&buffer_[length], ",\"STV\":\"%s%d.%02d\"", (data_.voltage.ST < 0)?"-":"", abs(data_.voltage.ST / 100), abs(data_.voltage.ST % 100));
-            length += sprintf(&buffer_[length], ",\"TRV\":\"%s%d.%02d\"", (data_.voltage.TR < 0)?"-":"", abs(data_.voltage.TR / 100), abs(data_.voltage.TR % 100));
-            length += sprintf(&buffer_[length], ",\"RC\":\"%s%d.%02d\"", (data_.current.R < 0)?"-":"", abs(data_.current.R / 100), abs(data_.current.R % 100));
-            length += sprintf(&buffer_[length], ",\"SC\":\"%s%d.%02d\"", (data_.current.S < 0)?"-":"", abs(data_.current.S / 100), abs(data_.current.S % 100));
-            length += sprintf(&buffer_[length], ",\"TC\":\"%s%d.%02d\"", (data_.current.T < 0)?"-":"", abs(data_.current.T / 100), abs(data_.current.T % 100));
-            length += sprintf(&buffer_[length], ",\"TEW\":\"%s%d.%02d\"", (data_.totalPower < 0)?"-":"", abs(data_.totalPower / 100), abs(data_.totalPower % 100));
-            //length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
-            length += sprintf(&buffer_[length], ",\"TEWH\":\"%d.%02d\"", abs(data_.totalEnergy / 100), abs(data_.totalEnergy % 100));
+            if(config_.message.voltage == true)
+            {
+                length += sprintf(&buffer_[length], ",\"RSV\":\"%s%d.%02d\"", (data_.voltage.RS < 0)?"-":"", abs(data_.voltage.RS / 100), abs(data_.voltage.RS % 100));
+                length += sprintf(&buffer_[length], ",\"STV\":\"%s%d.%02d\"", (data_.voltage.ST < 0)?"-":"", abs(data_.voltage.ST / 100), abs(data_.voltage.ST % 100));
+                length += sprintf(&buffer_[length], ",\"TRV\":\"%s%d.%02d\"", (data_.voltage.TR < 0)?"-":"", abs(data_.voltage.TR / 100), abs(data_.voltage.TR % 100));
+            }
+            if(config_.message.current == true)
+            {
+                length += sprintf(&buffer_[length], ",\"RC\":\"%s%d.%02d\"", (data_.current.R < 0)?"-":"", abs(data_.current.R / 100), abs(data_.current.R % 100));
+                length += sprintf(&buffer_[length], ",\"SC\":\"%s%d.%02d\"", (data_.current.S < 0)?"-":"", abs(data_.current.S / 100), abs(data_.current.S % 100));
+                length += sprintf(&buffer_[length], ",\"TC\":\"%s%d.%02d\"", (data_.current.T < 0)?"-":"", abs(data_.current.T / 100), abs(data_.current.T % 100));
+            }
+            if(config_.message.power == true)
+            {
+                length += sprintf(&buffer_[length], ",\"TEW\":\"%s%d.%02d\"", (data_.totalPower < 0)?"-":"", abs(data_.totalPower / 100), abs(data_.totalPower % 100));
+            }
+            if(config_.message.energy == true)
+            {
+                //length += sprintf(&buffer_[length], ",\"TEWH\":\"%d\"", data_.totalEnergy);
+                length += sprintf(&buffer_[length], ",\"TEWH\":\"%d.%02d\"", abs(data_.totalEnergy / 100), abs(data_.totalEnergy % 100));
+            }
             length += sprintf(&buffer_[length], "}");
             
             ret = CLIENT_MQTT_pub(config_.server.topic, buffer_);
@@ -1202,4 +1214,50 @@ RET_VALUE   CLIENT_setDelayOffset(uint32_t offset)
 uint32_t    CLIENT_getDelayOffset(void)
 {
     return  config_.delay.offset;
+}
+
+RET_VALUE   CLIENT_setMessageVoltage(bool  voltage)
+{
+    config_.message.voltage = voltage;
+    
+    return RET_OK;
+}
+
+bool    CLIENT_getMessageVoltage(void)
+{
+    return  config_.message.voltage;
+}
+
+RET_VALUE   CLIENT_setMessageCurrent(bool  current)
+{
+    config_.message.current = current;
+    
+    return RET_OK;
+}
+
+bool    CLIENT_getMessageCurrent(void)
+{
+    return  config_.message.current;
+}
+RET_VALUE   CLIENT_setMessagePower(bool  power)
+{
+    config_.message.power = power;
+    
+    return RET_OK;
+}
+
+bool    CLIENT_getMessagePower(void)
+{
+    return  config_.message.power;
+}
+RET_VALUE   CLIENT_setMessageEnergy(bool  energy)
+{
+    config_.message.energy = energy;
+    
+    return RET_OK;
+}
+
+bool    CLIENT_getMessageEnergy(void)
+{
+    return  config_.message.energy;
 }

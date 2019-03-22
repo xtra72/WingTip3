@@ -72,7 +72,14 @@ const CONFIG  defaultConfig =
             .period = 240,
             .member = 24,
             .offset = 0
-        },    
+        },
+        .message = 
+        {
+            .voltage = true,
+            .current = true,
+            .power = true,
+            .energy = true
+        },
 
     },
     .me_i10kl =
