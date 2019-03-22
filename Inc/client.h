@@ -212,5 +212,6 @@ RET_VALUE   CLIENT_setDelayMember(uint32_t member);
 uint32_t    CLIENT_getDelayMember(void);
 RET_VALUE   CLIENT_setDelayOffset(uint32_t offset);
 uint32_t    CLIENT_getDelayOffset(void);
-uint32_t   CLIENT_getTime(FI_TIME time);
+
+RET_VALUE   CLIENT_getTime(FI_TIME time, uint32_t* curTime);
 #endif

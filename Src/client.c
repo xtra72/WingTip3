@@ -789,8 +789,9 @@ RET_VALUE   CLIENT_loop(void)
                     }
                     
                     log_.nextWakeUpTime = nextAlarm;
-                    uint32_t cur_time = CLIENT_getTime(currentTime);
-                    nextAlarm = (uint32_t)(nextAlarm + ((nextAlarm - cur_time)/32.768) * 37);
+                    //uint32_t curTime = 0;
+                    //CLIENT_getTime(currentTime, &curTime);
+                    //nextAlarm = (uint32_t)(nextAlarm + ((nextAlarm - curTime)/32.768) * 37);
                     //nextAlarm = (int32_t)(nextAlarm / 32.768 * 37);
                     FI_TIME_setAlarm(nextAlarm);
                 }
@@ -1103,18 +1104,16 @@ RET_VALUE   CLIENT_getNextAlarm(FI_TIME time, FI_CLOCK *alarm)
     return  RET_OK;
 }
 
-uint32_t   CLIENT_getTime(FI_TIME time)
+RET_VALUE   CLIENT_getTime(FI_TIME time, uint32_t* curTime)
 {
-    
-    uint32_t    result = 0;
     RTC_TimeTypeDef     rtcTime;
     RTC_DateTypeDef     rtcDate;
     
     FI_TIME_toRTCDateTime(time, &rtcTime, &rtcDate);
     
-    result = (rtcTime.Hours * 60 + rtcTime.Minutes) * 60 + rtcTime.Seconds;
+    *curTime = (((rtcTime.Hours * 60) + rtcTime.Minutes) * 60) + rtcTime.Seconds;
     
-    return  result;
+    return  RET_OK;
 }
 
 RET_VALUE   CLIENT_goToSleep(void)
