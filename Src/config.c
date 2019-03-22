@@ -49,7 +49,7 @@ const CONFIG  defaultConfig =
         
         .opMode = 
         {
-            .mode = CLIENT_MODE_SLEEP_WITH_INTERVAL,
+            .mode = CLIENT_MODE_SLEEP_WITH_ALARM,
             .interval = 
             {
                 .start = 0,
@@ -57,10 +57,11 @@ const CONFIG  defaultConfig =
             },
             .alarm = 
             {
-                .count = 0,
+                .count = 2,
                 .times = 
                 {
                     0,
+                    43200,
                 }        
             }
         },
@@ -104,8 +105,8 @@ const CONFIG  defaultConfig =
         {
             .port = SERIAL_PORT_3,
             .baudrate = SERIAL_BAUDRATE_9600,
-            .parity = SERIAL_PARITY_EVEN,
-            .dataBits = SERIAL_DATA_BITS_9,
+            .parity = SERIAL_PARITY_NONE,
+            .dataBits = SERIAL_DATA_BITS_8,
             .stopBits = SERIAL_STOP_BITS_1,
             .priority = 5
         },
