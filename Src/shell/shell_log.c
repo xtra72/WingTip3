@@ -363,7 +363,7 @@ RET_VALUE   SHELL_LOG_printClientLog(CLIENT_LOG* clientLog)
         SHELL_printf("[ %20s ]", "Failed");
     }
     
-    if (clientLog->wakeUpTime != 0)
+    if (clientLog->nextWakeUpTime != 0)
     {
         SHELL_printf("[ %20s ]", FI_TIME_toString(clientLog->nextWakeUpTime, "%Y-%m-%d %H:%M:%S"));
     }
